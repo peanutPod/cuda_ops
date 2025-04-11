@@ -1,0 +1,5 @@
+/home/wangkai/cuda_ops/gemm/build/CMakeFiles/sgemm.dir
+/home/wangkai/cuda_ops/gemm/build/CMakeFiles/cuBLAS_sgemm.dir
+/home/wangkai/cuda_ops/gemm/build/CMakeFiles/simplest_kernel.dir
+/home/wangkai/cuda_ops/gemm/build/CMakeFiles/edit_cache.dir
+/home/wangkai/cuda_ops/gemm/build/CMakeFiles/rebuild_cache.dir

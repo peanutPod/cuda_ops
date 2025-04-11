@@ -1,0 +1,22 @@
+[
+{
+  "directory": "/home/wangkai/cuda_ops/gemm/build",
+  "command": "/usr/local/cuda/bin/nvcc -forward-unknown-to-host-compiler  -I/usr/local/cuda/include -I/home/wangkai/cuda_ops/gemm/src  --generate-code=arch=compute_86,code=[compute_86,sm_86] -std=c++17 -x cu -c /home/wangkai/cuda_ops/gemm/sgemm.cu -o CMakeFiles/sgemm.dir/sgemm.cu.o",
+  "file": "/home/wangkai/cuda_ops/gemm/sgemm.cu"
+},
+{
+  "directory": "/home/wangkai/cuda_ops/gemm/build",
+  "command": "/usr/local/cuda/bin/nvcc -forward-unknown-to-host-compiler  -I/usr/local/cuda/include -I/home/wangkai/cuda_ops/gemm/src  --generate-code=arch=compute_86,code=[compute_86,sm_86] -std=c++17 -x cu -c /home/wangkai/cuda_ops/gemm/src/runner.cu -o CMakeFiles/sgemm.dir/src/runner.cu.o",
+  "file": "/home/wangkai/cuda_ops/gemm/src/runner.cu"
+},
+{
+  "directory": "/home/wangkai/cuda_ops/gemm/build",
+  "command": "/usr/local/cuda/bin/nvcc -forward-unknown-to-host-compiler  -I/usr/local/cuda/include -I/home/wangkai/cuda_ops/gemm/src  --generate-code=arch=compute_52,code=[compute_52,sm_52] -std=c++17 -x cu -c /home/wangkai/cuda_ops/gemm/cuBLAS_sgemm.cu -o CMakeFiles/cuBLAS_sgemm.dir/cuBLAS_sgemm.cu.o",
+  "file": "/home/wangkai/cuda_ops/gemm/cuBLAS_sgemm.cu"
+},
+{
+  "directory": "/home/wangkai/cuda_ops/gemm/build",
+  "command": "/usr/local/cuda/bin/nvcc -forward-unknown-to-host-compiler  -I/usr/local/cuda/include -I/home/wangkai/cuda_ops/gemm/src  --generate-code=arch=compute_52,code=[compute_52,sm_52] -std=c++17 -x cu -c /home/wangkai/cuda_ops/gemm/simplest_kernel.cu -o CMakeFiles/simplest_kernel.dir/simplest_kernel.cu.o",
+  "file": "/home/wangkai/cuda_ops/gemm/simplest_kernel.cu"
+}
+]
