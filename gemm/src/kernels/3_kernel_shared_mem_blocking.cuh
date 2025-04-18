@@ -18,8 +18,9 @@ __global__ void sgemm_shared_mem_block(int M, int N, int K, float alpha,
 
   // allocate buffer for current block in fast shared mem
   // shared mem is shared between all threads in a block
-  __shared__ float As[BLOCKSIZE * BLOCKSIZE];
-  __shared__ float Bs[BLOCKSIZE * BLOCKSIZE];
+  __shared__ float As[BLOCKSIZE * BLOCKSIZE]; //4kb
+  __shared__ float Bs[BLOCKSIZE * BLOCKSIZE]; //4kb
+  
 
   // the inner row & col that we're accessing in this thread
   const uint threadRow = threadIdx.x / BLOCKSIZE;
