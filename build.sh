@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the source file and output binary
-KERNEL="gelu"
+KERNEL="leakyrelu"
 SOURCE="$KERNEL.cu"
 OUTPUT="$KERNEL"
 
