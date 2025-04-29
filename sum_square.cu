@@ -119,6 +119,38 @@ __global__ void sum_square_kernel_warp(const float* input, float* partial_sums, 
     }
 }
 
+
+__global__ void sum_square_kernel_warp_optimized(const float* input, float* partial_sums, int size) {
+    __shared__ float shared_data[1024]; // Shared memory for partial sums
+    int tid = threadIdx.x;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+    // Load data into shared memory
+    float val = (idx < size) ? input[idx] * input[idx] : 0.0f;
+    shared_data[tid] = val;
+    __syncthreads();
+
+    // Perform block-level reduction in shared memory
+    for (int stride = blockDim.x / 2; stride > 32; stride /= 2) {
+        if (tid < stride) {
+            shared_data[tid] += shared_data[tid + stride];
+        }
+        __syncthreads();
+    }
+
+    // Perform warp-level reduction directly in registers
+    if (tid < 32) {
+        for (int offset = 16; offset > 0; offset /= 2) {
+            val += __shfl_down_sync(0xFFFFFFFF, val, offset);
+        }
+    }
+
+    // Write the result of this block to the output array
+    if (tid == 0) {
+        partial_sums[blockIdx.x] = val;
+    }
+}
+
 void compute_sum_square(const float* h_input, float* h_output, int size) {
     float *d_input, *d_partial_sums;
     int threads = 256;
@@ -130,6 +162,7 @@ void compute_sum_square(const float* h_input, float* h_output, int size) {
 
     // Copy input data to device
     cudaMemcpy(d_input, h_input, size * sizeof(float), cudaMemcpyHostToDevice);
+    sum_square_kernel_warp<<<blocks, threads>>>(d_input, d_partial_sums, size);
 
     // Create CUDA events for timing
     cudaEvent_t start, stop;
@@ -142,7 +175,7 @@ void compute_sum_square(const float* h_input, float* h_output, int size) {
 
 
     // Launch the optimized kernel
-    sum_square_kernel_warp<<<blocks, threads>>>(d_input, d_partial_sums, size);
+    sum_square_kernel_warp_optimized<<<blocks, threads>>>(d_input, d_partial_sums, size);
     cudaDeviceSynchronize();
 
     // Record the stop event
