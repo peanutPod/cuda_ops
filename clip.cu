@@ -1,11 +1,12 @@
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
+#include <stdio.h>
+#include <stdlib.h>
 // Clip operator limits the given input within an interval. 
 // The interval is specified by the inputs 'min' and 'max'. 
 // They default to numeric_limits::lowest() and numeric_limits::max(), respectively.
 // When 'min' is greater than 'max', the clip operator sets all the 'input' values to the value of 'max'. 
 // Thus, this is equivalent to 'Min(max, Max(input, min))'.
-
 
 __global__ void clip_kernel(const float* input,float* output, float min ,float max, int size){
     int idx =blockIdx.x* blockDim.x + threadIdx.x;
@@ -14,7 +15,6 @@ __global__ void clip_kernel(const float* input,float* output, float min ,float m
         output[idx] = fminf(fmaxf(data, min), max);
     }
 }
-
 
 __global__ void clip_kernel_half(const __half* input, __half* output, const __half min, const __half max, int size) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -33,7 +33,6 @@ __global__ void clip_kernel_half(const __half* input, __half* output, const __ha
     }
 }
 
-
 // Test function for single-precision (float)
 void test_clip_float(const float* h_input, float* h_output, float min, float max, int size) {
     float *d_input, *d_output;
@@ -45,11 +44,28 @@ void test_clip_float(const float* h_input, float* h_output, float min, float max
     // Copy input data to device
     cudaMemcpy(d_input, h_input, size * sizeof(float), cudaMemcpyHostToDevice);
 
+    // Create CUDA events for timing
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    // Record the start event
+    cudaEventRecord(start);
+
     // Launch kernel
     int threads = 256;
     int blocks = (size + threads - 1) / threads;
     clip_kernel<<<blocks, threads>>>(d_input, d_output, min, max, size);
     cudaDeviceSynchronize();
+
+    // Record the stop event
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+
+    // Calculate elapsed time
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    printf("Time taken for clip_kernel (float): %f ms\n", milliseconds);
 
     // Copy result back to host
     cudaMemcpy(h_output, d_output, size * sizeof(float), cudaMemcpyDeviceToHost);
@@ -57,6 +73,10 @@ void test_clip_float(const float* h_input, float* h_output, float min, float max
     // Free device memory
     cudaFree(d_input);
     cudaFree(d_output);
+
+    // Destroy CUDA events
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
 }
 
 // Test function for half-precision (__half)
@@ -73,14 +93,35 @@ void test_clip_half(const float* h_input_float, float* h_output_float, float min
     cudaMalloc(&d_input, size * sizeof(__half));
     cudaMalloc(&d_output, size * sizeof(__half));
 
-    // Copy input data to device
-    cudaMemcpy(d_input, h_input_half, size * sizeof(__half), cudaMemcpyHostToDevice);
 
-    // Launch kernel
     int threads = 256;
     int blocks = (size + threads - 1) / threads;
+
+    // Copy input data to device
+    cudaMemcpy(d_input, h_input_half, size * sizeof(__half), cudaMemcpyHostToDevice);
+    
+    clip_kernel_half<<<blocks, threads>>>(d_input, d_output, __float2half(min), __float2half(max), size);
+
+    // Create CUDA events for timing
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    // Record the start event
+    cudaEventRecord(start);
+
+    // Launch kernel
     clip_kernel_half<<<blocks, threads>>>(d_input, d_output, __float2half(min), __float2half(max), size);
     cudaDeviceSynchronize();
+
+    // Record the stop event
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+
+    // Calculate elapsed time
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    printf("Time taken for clip_kernel_half (__half): %f ms\n", milliseconds);
 
     // Copy result back to host
     cudaMemcpy(h_output_half, d_output, size * sizeof(__half), cudaMemcpyDeviceToHost);
@@ -97,6 +138,66 @@ void test_clip_half(const float* h_input_float, float* h_output_float, float min
     // Free host memory
     free(h_input_half);
     free(h_output_half);
+
+    // Destroy CUDA events
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+}
+
+template <typename T>
+__global__ void clip_kernel_template(const T* input, T* output, T min, T max, int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        T data = input[idx];
+        T tmp= data >min ? data : min;
+        output[idx] = tmp < max ? tmp : max;
+    }
+}
+
+// Test function for `clip_kernel_template` with `float`
+void test_clip_template_float(const float* h_input, float* h_output, float min, float max, int size) {
+    float *d_input, *d_output;
+
+    // Allocate device memory
+    cudaMalloc(&d_input, size * sizeof(float));
+    cudaMalloc(&d_output, size * sizeof(float));
+
+    // Copy input data to device
+    cudaMemcpy(d_input, h_input, size * sizeof(float), cudaMemcpyHostToDevice);
+
+    // Create CUDA events for timing
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    // Record the start event
+    cudaEventRecord(start);
+
+    // Launch kernel
+    int threads = 256;
+    int blocks = (size + threads - 1) / threads;
+    clip_kernel_template<<<blocks, threads>>>(d_input, d_output, min, max, size);
+    cudaDeviceSynchronize();
+
+    // Record the stop event
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+
+    // Calculate elapsed time
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    printf("Time taken for clip_kernel_template (float): %f ms\n", milliseconds);
+
+    // Copy result back to host
+    cudaMemcpy(h_output, d_output, size * sizeof(float), cudaMemcpyDeviceToHost);
+
+    // Free device memory
+    cudaFree(d_input);
+    cudaFree(d_output);
+
+    // Destroy CUDA events
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
 }
 
 int main() {
@@ -121,6 +222,10 @@ int main() {
     // Test half-precision kernel
     printf("Testing clip_kernel_half (__half)...\n");
     test_clip_half(h_input, h_output_half, min, max, size);
+
+    // Test template kernel
+    printf("Testing clip_kernel_template (float)...\n");
+    test_clip_template_float(h_input, h_output_float, min, max, size);
 
     // Verify results
     printf("Verifying results...\n");

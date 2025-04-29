@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the source file and output binary
-KERNEL="leakyrelu"
+KERNEL="sum_square"
 SOURCE="$KERNEL.cu"
 OUTPUT="$KERNEL"
 
