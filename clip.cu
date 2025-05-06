@@ -42,7 +42,11 @@ void test_clip_float(const float* h_input, float* h_output, float min, float max
     cudaMalloc(&d_output, size * sizeof(float));
 
     // Copy input data to device
+    int threads = 256;
+    int blocks = (size + threads - 1) / threads;
+
     cudaMemcpy(d_input, h_input, size * sizeof(float), cudaMemcpyHostToDevice);
+    clip_kernel<<<blocks, threads>>>(d_input, d_output, min, max, size);
 
     // Create CUDA events for timing
     cudaEvent_t start, stop;
@@ -53,8 +57,6 @@ void test_clip_float(const float* h_input, float* h_output, float min, float max
     cudaEventRecord(start);
 
     // Launch kernel
-    int threads = 256;
-    int blocks = (size + threads - 1) / threads;
     clip_kernel<<<blocks, threads>>>(d_input, d_output, min, max, size);
     cudaDeviceSynchronize();
 
@@ -154,6 +156,7 @@ __global__ void clip_kernel_template(const T* input, T* output, T min, T max, in
     }
 }
 
+
 // Test function for `clip_kernel_template` with `float`
 void test_clip_template_float(const float* h_input, float* h_output, float min, float max, int size) {
     float *d_input, *d_output;
@@ -164,6 +167,10 @@ void test_clip_template_float(const float* h_input, float* h_output, float min, 
 
     // Copy input data to device
     cudaMemcpy(d_input, h_input, size * sizeof(float), cudaMemcpyHostToDevice);
+    int threads = 256;
+    int blocks = (size + threads - 1) / threads;
+
+    clip_kernel_template<<<blocks, threads>>>(d_input, d_output, min, max, size);
 
     // Create CUDA events for timing
     cudaEvent_t start, stop;
@@ -174,8 +181,6 @@ void test_clip_template_float(const float* h_input, float* h_output, float min, 
     cudaEventRecord(start);
 
     // Launch kernel
-    int threads = 256;
-    int blocks = (size + threads - 1) / threads;
     clip_kernel_template<<<blocks, threads>>>(d_input, d_output, min, max, size);
     cudaDeviceSynchronize();
 
