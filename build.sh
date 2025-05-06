@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the source file and output binary
-KERNEL="sum_square"
+KERNEL="l2"
 SOURCE="$KERNEL.cu"
 OUTPUT="$KERNEL"
 
