@@ -51,6 +51,9 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "*.cu": "cpp",
-        "*.cuh": "cpp"
+        "*.cuh": "cpp",
+        "chrono": "cpp",
+        "semaphore": "cpp",
+        "barrier": "cpp"
     }
 }
